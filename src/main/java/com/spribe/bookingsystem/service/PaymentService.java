@@ -1,8 +1,5 @@
 package com.spribe.bookingsystem.service;
 
-import static com.spribe.bookingsystem.util.Constants.PAYMENT_EXPIRATION_TIME;
-import static com.spribe.bookingsystem.util.Constants.PENDING_PAYMENTS_KEY;
-import static com.spribe.bookingsystem.util.Constants.REDIS_UNITS_KEY;
 import static java.lang.Integer.parseInt;
 import com.spribe.bookingsystem.entity.EventEntity;
 import com.spribe.bookingsystem.entity.EventStatus;
@@ -14,11 +11,9 @@ import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -26,7 +21,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PaymentService {
 
-    private final StringRedisTemplate redisTemplate;
     private final PaymentRepository paymentRepository;
     private final EventRepository eventRepository;
     private final EventRepository bookingRepository;
@@ -90,7 +84,7 @@ public class PaymentService {
             }
         }
 
-        redisTemplate.delete(keyPattern);
+        cacheService.delete(keyPattern);
         paymentRepository.save(payment);
         bookingRepository.save(payment.getEvent());
     }

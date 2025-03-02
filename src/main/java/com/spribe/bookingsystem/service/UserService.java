@@ -2,7 +2,6 @@ package com.spribe.bookingsystem.service;
 
 import com.spribe.bookingsystem.entity.UserEntity;
 import com.spribe.bookingsystem.repository.UserRepository;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

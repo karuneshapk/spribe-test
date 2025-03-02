@@ -12,8 +12,6 @@ import com.spribe.bookingsystem.repository.EventRepository;
 import com.spribe.bookingsystem.repository.PaymentRepository;
 import com.spribe.bookingsystem.repository.UnitRepository;
 import jakarta.transaction.Transactional;
-import java.beans.Transient;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -59,6 +57,14 @@ public class CacheService {
 
             return null;
         });
+    }
+
+    public Set<String> getAvailabelKeys() {
+        return redisTemplate.keys(REDIS_UNITS_KEY + ":*");
+    }
+
+    public void delete(String keyPattern) {
+        redisTemplate.delete(keyPattern);
     }
 
     public Set<String> getKeysForUnitId(Integer unitId) {

@@ -1,4 +1,4 @@
-package com.spribe.bookingsystem.service;
+package com.spribe.bookingsystem.util;
 
 import com.spribe.bookingsystem.entity.AccommodationType;
 import com.spribe.bookingsystem.entity.UnitEntity;
