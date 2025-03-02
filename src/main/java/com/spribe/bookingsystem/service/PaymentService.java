@@ -3,6 +3,7 @@ package com.spribe.bookingsystem.service;
 import static com.spribe.bookingsystem.util.Constants.PAYMENT_EXPIRATION_TIME;
 import static com.spribe.bookingsystem.util.Constants.PENDING_PAYMENTS_KEY;
 import static com.spribe.bookingsystem.util.Constants.REDIS_UNITS_KEY;
+import static java.lang.Integer.parseInt;
 import com.spribe.bookingsystem.entity.EventEntity;
 import com.spribe.bookingsystem.entity.EventStatus;
 import com.spribe.bookingsystem.entity.PaymentEntity;
@@ -24,10 +25,12 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @RequiredArgsConstructor
 public class PaymentService {
-    
+
     private final StringRedisTemplate redisTemplate;
     private final PaymentRepository paymentRepository;
+    private final EventRepository eventRepository;
     private final EventRepository bookingRepository;
+    private final CacheService cacheService;
 
     @Transactional
     public void initiatePayment(EventEntity event) {
@@ -39,13 +42,22 @@ public class PaymentService {
 
         PaymentEntity savedPayment = paymentRepository.save(payment);
 
-        String redisKey = makeRedisKey(savedPayment, event.getStartDate(), event.getEndDate());
-
         // Store payment in Redis with a 15-minute TTL
-        redisTemplate.opsForValue().set(redisKey, "PENDING", PAYMENT_EXPIRATION_TIME, TimeUnit.MINUTES);
+        cacheService.putEventToTheCacheWithExpirationTime(payment.getEvent());
+    }
 
-        // Schedule a callback to move expired payments to the expired list when TTL reaches 0
-        redisTemplate.expire(redisKey, PAYMENT_EXPIRATION_TIME, TimeUnit.MINUTES);
+    public void cleanupOrphanedPayments(Integer unitId, Set<String> redisKeys) {
+        List<Integer> paymentIds = redisKeys.isEmpty() ? null : redisKeys.stream().map(this::getPaymentId).toList();
+
+        List<PaymentEntity> orphanedPayments = paymentRepository.findOrphanedPaymentsNotInIds(unitId, paymentIds);
+
+        for (PaymentEntity payment : orphanedPayments) {
+            payment.getEvent().setStatus(EventStatus.CANCELLED);
+            eventRepository.save(payment.getEvent());
+
+            payment.setStatus(PaymentStatus.FAILED);
+            paymentRepository.save(payment);
+        }
     }
 
     public PaymentEntity save(PaymentEntity payment) {
@@ -65,8 +77,8 @@ public class PaymentService {
         PaymentEntity payment = paymentRepository.findById(paymentId)
             .orElseThrow(() -> new RuntimeException("Payment not found"));
 
-        String redisKey = makeRedisKey(payment, payment.getEvent().getStartDate(), payment.getEvent().getEndDate());
-        Set<String> redisKeys = redisTemplate.keys(redisKey);
+        String keyPattern = cacheService.makeRedisKey(payment);
+        Set<String> redisKeys = cacheService.getKeysForUnitIdAndPaymentId(keyPattern);
 
         if (CollectionUtils.isNotEmpty(redisKeys)) {
             if (success) {
@@ -78,20 +90,14 @@ public class PaymentService {
             }
         }
 
-        redisTemplate.delete(redisKey);
+        redisTemplate.delete(keyPattern);
         paymentRepository.save(payment);
         bookingRepository.save(payment.getEvent());
     }
 
-    private String makeRedisKey(PaymentEntity payment, LocalDate startDate, LocalDate endDate) {
-        String redisKey = REDIS_UNITS_KEY + ":" + payment.getEvent().getUnit().getId() + ":"
-            + PENDING_PAYMENTS_KEY + ":" + payment.getId() + ":"
-            + "startDate:" + startDate.toString() + ":"
-            + "endDate:" + endDate.toString();
 
-        log.debug("redisKey: {}", redisKey);
-
-        return redisKey;
+    private Integer getPaymentId(String key) {
+        return parseInt(key.split(":")[3]);
     }
 
 }
