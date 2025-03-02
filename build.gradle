@@ -34,12 +34,12 @@ dependencies {
 	testImplementation 'org.projectlombok:lombok:1.18.30'
 	testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
 
-	implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+	implementation("org.mapstruct:mapstruct:1.5.5.Final")
+	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
 
-	// For Lombok compatibility with MapStruct
-	implementation 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
+	// Lombok integration
+	implementation("org.projectlombok:lombok")
+	annotationProcessor("org.projectlombok:lombok")
 
 	// Redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -63,4 +63,12 @@ tasks.named('test') {
 tasks.named('asciidoctor') {
 	inputs.dir snippetsDir
 	dependsOn test
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.compilerArgs += [
+			"-Amapstruct.defaultComponentModel=spring",
+			"-Amapstruct.defaultInjectionStrategy=constructor",
+			"-Amapstruct.unmappedTargetPolicy=ERROR"
+	]
 }

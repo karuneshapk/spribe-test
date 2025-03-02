@@ -38,9 +38,9 @@ public class UnitController {
         @RequestParam(required = false) BigDecimal maxCost,
         @RequestParam(required = false) LocalDate startDate,
         @RequestParam(required = false) LocalDate endDate,
-        @RequestParam int page,
-        @RequestParam int size,
-        @RequestParam String sortBy,
+        @RequestParam(defaultValue = "0", required = false) int page,
+        @RequestParam(defaultValue = "10", required = false) int size,
+        @RequestParam(defaultValue = "type", required = false) String sortBy,
         @RequestParam boolean asc) {
         return unitService.searchUnits(type, numRooms, floor, minCost, maxCost, startDate, endDate, page, size, sortBy, asc);
     }
