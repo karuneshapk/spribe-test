@@ -11,6 +11,7 @@ import com.spribe.bookingsystem.repository.EventRepository;
 import com.spribe.bookingsystem.repository.PaymentRepository;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +24,10 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @RequiredArgsConstructor
 public class PaymentService {
+    
+    private final StringRedisTemplate redisTemplate;
     private final PaymentRepository paymentRepository;
     private final EventRepository bookingRepository;
-    private final StringRedisTemplate redisTemplate;
 
     @Transactional
     public void initiatePayment(EventEntity event) {
@@ -44,6 +46,18 @@ public class PaymentService {
 
         // Schedule a callback to move expired payments to the expired list when TTL reaches 0
         redisTemplate.expire(redisKey, PAYMENT_EXPIRATION_TIME, TimeUnit.MINUTES);
+    }
+
+    public PaymentEntity save(PaymentEntity payment) {
+        return paymentRepository.save(payment);
+    }
+
+    public List<PaymentEntity> findOrphanedPayments(Integer unitId, List<Integer> paymentIds) {
+        return paymentRepository.findOrphanedPaymentsNotInIds(unitId, paymentIds);
+    }
+
+    public boolean isUnitAvailable(Integer unitId, LocalDate startDate, LocalDate endDate) {
+        return paymentRepository.isUnitAvailableForBooking(unitId, startDate, endDate);
     }
 
     @Transactional

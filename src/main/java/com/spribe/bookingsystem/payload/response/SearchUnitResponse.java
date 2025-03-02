@@ -1,5 +1,6 @@
 package com.spribe.bookingsystem.payload.response;
 
+import com.spribe.bookingsystem.payload.response.data.UnitData;
 import java.util.List;
 import lombok.Builder;
 

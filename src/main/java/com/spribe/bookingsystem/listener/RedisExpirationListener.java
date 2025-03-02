@@ -1,4 +1,4 @@
-package com.spribe.bookingsystem.service;
+package com.spribe.bookingsystem.listener;
 
 import static com.spribe.bookingsystem.util.Constants.PENDING_PAYMENTS_KEY;
 import com.spribe.bookingsystem.entity.EventStatus;

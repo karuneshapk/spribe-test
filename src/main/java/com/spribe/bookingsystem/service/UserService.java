@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
     private final UserRepository userRepository;
 
-    public Optional<UserEntity> getUserById(int userId) {
-        return userRepository.findById(userId);
+    public UserEntity getUserById(int userId) {
+        return userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
     }
 }

@@ -3,7 +3,7 @@ package com.spribe.bookingsystem.service;
 
 import static com.spribe.bookingsystem.util.Constants.PENDING_PAYMENTS_KEY;
 import static com.spribe.bookingsystem.util.Constants.REDIS_UNITS_KEY;
-import static java.lang.Integer.*;
+import static java.lang.Integer.parseInt;
 import com.spribe.bookingsystem.entity.EventEntity;
 import com.spribe.bookingsystem.entity.EventStatus;
 import com.spribe.bookingsystem.entity.PaymentEntity;
@@ -11,8 +11,6 @@ import com.spribe.bookingsystem.entity.PaymentStatus;
 import com.spribe.bookingsystem.entity.UnitEntity;
 import com.spribe.bookingsystem.entity.UserEntity;
 import com.spribe.bookingsystem.repository.EventRepository;
-import com.spribe.bookingsystem.repository.PaymentRepository;
-import com.spribe.bookingsystem.repository.UnitRepository;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.List;
@@ -25,25 +23,22 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class EventService {
-    private final EventRepository eventRepository;
-    private final UserService userService;
-    private final UnitRepository unitRepository;
-    private final PaymentService paymentService;
-    private final PaymentRepository paymentRepository;
+public class BookingService {
+
     private final StringRedisTemplate redisTemplate;
-
-
+    private final EventRepository eventRepository;
+    private final PaymentService paymentService;
+    private final UserService userService;
+    private final UnitService unitService;
 
     @Transactional
     public EventEntity bookUnit(int userId, int unitId, LocalDate startDate, LocalDate endDate) {
-        UserEntity user = userService.getUserById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
-        UnitEntity unit = unitRepository.findById(unitId)
-            .orElseThrow(() -> new RuntimeException("Unit not found"));
+        UserEntity user = userService.getUserById(userId);
+        UnitEntity unit = unitService.findById(unitId);
 
         // Step 1: Check if unit is in Redis (already booked)
-        Set<String> redisKeys = redisTemplate.keys(REDIS_UNITS_KEY + ":" + unitId + ":" + PENDING_PAYMENTS_KEY + ":*");
+        String keyPattern = REDIS_UNITS_KEY + ":" + unitId + ":" + PENDING_PAYMENTS_KEY + ":*";
+        Set<String> redisKeys = redisTemplate.keys(keyPattern);
 
         // Step 2: Cleanup orphaned events & payments before processing new ones (in case of crashed application)
         cleanupOrphanedPayments(unitId, redisKeys);
@@ -58,7 +53,7 @@ public class EventService {
         }
 
         // Step 4: Check DB if unit already has CONFIRMED status for current date range
-        boolean isAvailable = paymentRepository.isUnitAvailableForBooking(unitId, startDate, endDate);
+        boolean isAvailable = paymentService.isUnitAvailable(unitId, startDate, endDate);
 
         if (!isAvailable) {
             throw new RuntimeException("Unit is already booked for overlapping dates");
@@ -89,14 +84,14 @@ public class EventService {
     private void cleanupOrphanedPayments(int unitId, Set<String> redisKeys) {
         List<Integer> paymentIds = redisKeys.isEmpty() ? null : redisKeys.stream().map(this::getPaymentId).toList();
 
-        List<PaymentEntity> orphanedPayments = paymentRepository.findOrphanedPaymentsNotInIds(unitId, paymentIds);
+        List<PaymentEntity> orphanedPayments = paymentService.findOrphanedPayments(unitId, paymentIds);
 
         for (PaymentEntity payment : orphanedPayments) {
             payment.getEvent().setStatus(EventStatus.CANCELLED);
             eventRepository.save(payment.getEvent());
 
             payment.setStatus(PaymentStatus.FAILED);
-            paymentRepository.save(payment);
+            paymentService.save(payment);
         }
     }
 

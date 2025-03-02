@@ -1,7 +1,7 @@
 package com.spribe.bookingsystem.mapper;
 
 import com.spribe.bookingsystem.entity.UnitEntity;
-import com.spribe.bookingsystem.payload.response.UnitData;
+import com.spribe.bookingsystem.payload.response.data.UnitData;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;

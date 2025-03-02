@@ -1,6 +1,6 @@
 package com.spribe.bookingsystem.config;
 
-import com.spribe.bookingsystem.service.RedisExpirationListener;
+import com.spribe.bookingsystem.listener.RedisExpirationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;

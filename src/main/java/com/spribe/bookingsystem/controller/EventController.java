@@ -1,7 +1,7 @@
 package com.spribe.bookingsystem.controller;
 
 import com.spribe.bookingsystem.entity.EventEntity;
-import com.spribe.bookingsystem.service.EventService;
+import com.spribe.bookingsystem.service.BookingService;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/bookings")
 @RequiredArgsConstructor
 public class EventController {
-    private final EventService eventService;
+    private final BookingService eventService;
 
     @PostMapping
     public ResponseEntity<EventEntity> bookUnit(@RequestParam int userId, @RequestParam int unitId, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {

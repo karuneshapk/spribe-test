@@ -1,4 +1,4 @@
-package com.spribe.bookingsystem.payload.response;
+package com.spribe.bookingsystem.payload.response.data;
 
 import com.spribe.bookingsystem.entity.AccommodationType;
 import java.math.BigDecimal;

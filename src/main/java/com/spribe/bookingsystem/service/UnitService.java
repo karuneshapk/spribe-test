@@ -9,7 +9,7 @@ import com.spribe.bookingsystem.entity.PaymentStatus;
 import com.spribe.bookingsystem.entity.UnitEntity;
 import com.spribe.bookingsystem.mapper.UnitMapper;
 import com.spribe.bookingsystem.payload.response.SearchUnitResponse;
-import com.spribe.bookingsystem.payload.response.UnitData;
+import com.spribe.bookingsystem.payload.response.data.UnitData;
 import com.spribe.bookingsystem.repository.EventRepository;
 import com.spribe.bookingsystem.repository.PaymentRepository;
 import com.spribe.bookingsystem.repository.UnitRepository;
@@ -54,6 +54,10 @@ public class UnitService {
         List<UnitData> units = currentPage.getContent().stream().map(unitMapper::toUnitData).toList();
 
         return SearchUnitResponse.builder().total(totalElements).units(units).build();
+    }
+
+    public UnitEntity findById(Integer id) {
+        return unitRepository.findById(id).orElseThrow(() -> new RuntimeException("Unit not found"));
     }
 
     @Transactional
