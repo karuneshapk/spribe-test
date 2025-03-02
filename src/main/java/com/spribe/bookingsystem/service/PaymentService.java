@@ -5,6 +5,7 @@ import com.spribe.bookingsystem.entity.EventEntity;
 import com.spribe.bookingsystem.entity.EventStatus;
 import com.spribe.bookingsystem.entity.PaymentEntity;
 import com.spribe.bookingsystem.entity.PaymentStatus;
+import com.spribe.bookingsystem.exception.PaymentNotFoundException;
 import com.spribe.bookingsystem.repository.EventRepository;
 import com.spribe.bookingsystem.repository.PaymentRepository;
 import jakarta.transaction.Transactional;
@@ -36,8 +37,7 @@ public class PaymentService {
 
         PaymentEntity savedPayment = paymentRepository.save(payment);
 
-        // Store payment in Redis with a 15-minute TTL
-        cacheService.putEventToTheCacheWithExpirationTime(payment.getEvent());
+        cacheService.putEventToTheCacheWithExpirationTime(savedPayment.getEvent());
     }
 
     public void cleanupOrphanedPayments(Integer unitId, Set<String> redisKeys) {
@@ -69,7 +69,7 @@ public class PaymentService {
     @Transactional
     public void processPayment(int paymentId, boolean success) {
         PaymentEntity payment = paymentRepository.findById(paymentId)
-            .orElseThrow(() -> new RuntimeException("Payment not found"));
+            .orElseThrow(() -> new PaymentNotFoundException(paymentId));
 
         String keyPattern = cacheService.makeRedisKey(payment);
         Set<String> redisKeys = cacheService.getKeysForUnitIdAndPaymentId(keyPattern);

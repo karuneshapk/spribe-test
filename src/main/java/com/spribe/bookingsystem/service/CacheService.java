@@ -42,7 +42,7 @@ public class CacheService {
 
             Set<String> redisKeys = redisTemplate.keys(REDIS_UNITS_KEY + ":*");
 
-            // Step 2: Cleanup orphaned events & payments before processing new ones (in case of crashed application)
+            // Cleanup orphaned events & payments before processing new ones (in case of crashed application)
             cleanupOrphanedPayments(null, redisKeys);
 
             long availableUnitsCount = unitRepository.countAvailableUnits(null, null);

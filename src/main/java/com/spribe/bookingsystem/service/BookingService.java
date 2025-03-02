@@ -7,6 +7,7 @@ import com.spribe.bookingsystem.entity.PaymentEntity;
 import com.spribe.bookingsystem.entity.PaymentStatus;
 import com.spribe.bookingsystem.entity.UnitEntity;
 import com.spribe.bookingsystem.entity.UserEntity;
+import com.spribe.bookingsystem.exception.UnitAlreadyBookedException;
 import com.spribe.bookingsystem.repository.EventRepository;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
@@ -41,7 +42,7 @@ public class BookingService {
         if (CollectionUtils.isNotEmpty(redisKeys)) {
             for (String redisKey : redisKeys) {
                 if (isDateRangeOverlapping(redisKey, startDate, endDate)) {
-                    throw new RuntimeException("Unit is already booked for overlapping dates (wait ~15 minutes and check again)");
+                    throw new UnitAlreadyBookedException("Unit is already booked for overlapping dates (wait ~15 minutes and check again)");
                 }
             }
         }
@@ -50,7 +51,7 @@ public class BookingService {
         boolean isAvailable = paymentService.isUnitAvailable(unitId, startDate, endDate);
 
         if (!isAvailable) {
-            throw new RuntimeException("Unit is already booked for overlapping dates");
+            throw new UnitAlreadyBookedException("Unit is already booked for overlapping dates");
         }
 
         EventEntity eventEntity = persistEvent(userId, unitId, startDate, endDate);

@@ -3,6 +3,7 @@ package com.spribe.bookingsystem.service;
 import com.spribe.bookingsystem.entity.AccommodationType;
 import com.spribe.bookingsystem.entity.UnitEntity;
 import com.spribe.bookingsystem.entity.UserEntity;
+import com.spribe.bookingsystem.exception.UnitNotFoundException;
 import com.spribe.bookingsystem.mapper.UnitMapper;
 import com.spribe.bookingsystem.payload.request.dto.UnitDto;
 import com.spribe.bookingsystem.payload.response.SearchUnitResponse;
@@ -46,7 +47,7 @@ public class UnitService {
     }
 
     public UnitEntity findById(Integer id) {
-        return unitRepository.findById(id).orElseThrow(() -> new RuntimeException("Unit not found"));
+        return unitRepository.findById(id).orElseThrow(() -> new UnitNotFoundException(id));
     }
 
     @Transactional

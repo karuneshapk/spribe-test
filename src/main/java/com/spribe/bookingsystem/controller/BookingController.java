@@ -13,7 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/bookings")
 @RequiredArgsConstructor
-public class EventController {
+public class BookingController {
+
     private final BookingService eventService;
 
     @PostMapping
