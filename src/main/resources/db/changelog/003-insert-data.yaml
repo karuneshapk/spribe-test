@@ -1,0 +1,109 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-insert-users
+      author: Nemo
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: name
+                  value: "Alice Johnson"
+              - column:
+                  name: email
+                  value: "alice@example.com"
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: name
+                  value: "Bob Smith"
+              - column:
+                  name: email
+                  value: "bob@example.com"
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: name
+                  value: "Charlie Brown"
+              - column:
+                  name: email
+                  value: "charlie@example.com"
+
+  - changeSet:
+      id: 007-insert-units
+      author: Nemo
+      changes:
+        - insert:
+            tableName: units
+            columns:
+              - column:
+                  name: user_id
+                  value: 1
+              - column:
+                  name: num_rooms
+                  value: 3
+              - column:
+                  name: type
+                  value: "HOME"
+              - column:
+                  name: floor
+                  value: 1
+              - column:
+                  name: description
+                  value: "Spacious home with garden"
+              - column:
+                  name: base_cost
+                  value: 100.00
+              - column:
+                  name: total_cost
+                  value: 115.00
+        - insert:
+            tableName: units
+            columns:
+              - column:
+                  name: user_id
+                  value: 2
+              - column:
+                  name: num_rooms
+                  value: 2
+              - column:
+                  name: type
+                  value: "FLAT"
+              - column:
+                  name: floor
+                  value: 3
+              - column:
+                  name: description
+                  value: "Modern flat in city center"
+              - column:
+                  name: base_cost
+                  value: 80.00
+              - column:
+                  name: total_cost
+                  value: 92.00
+        - insert:
+            tableName: units
+            columns:
+              - column:
+                  name: user_id
+                  value: 3
+              - column:
+                  name: num_rooms
+                  value: 4
+              - column:
+                  name: type
+                  value: "APARTMENTS"
+              - column:
+                  name: floor
+                  value: 5
+              - column:
+                  name: description
+                  value: "Luxury apartments with sea view"
+              - column:
+                  name: base_cost
+                  value: 200.00
+              - column:
+                  name: total_cost
+                  value: 230.00

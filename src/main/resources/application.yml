@@ -1,0 +1,30 @@
+spring:
+
+  application:
+    name: bookingsystem
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/spribe
+    username: spribe_user
+    password: spribe_password
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+    enabled: true
+
+  redis:
+    host: localhost  # or 'redis' if running in Docker Compose
+    port: 6379
+    timeout: 60000  # Connection timeout in milliseconds
+    lettuce:
+      pool:
+        max-active: 10  # Maximum active connections
+        max-idle: 5  # Maximum idle connections
+        min-idle: 2  # Minimum idle connections
+        max-wait: 2000ms  # Maximum wait time for connection pool
