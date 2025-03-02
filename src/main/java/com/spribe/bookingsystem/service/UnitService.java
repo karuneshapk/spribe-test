@@ -1,6 +1,5 @@
 package com.spribe.bookingsystem.service;
 
-import static com.spribe.bookingsystem.util.Constants.PENDING_PAYMENTS_KEY;
 import static com.spribe.bookingsystem.util.Constants.REDIS_UNITS_KEY;
 import static java.lang.Integer.parseInt;
 import com.spribe.bookingsystem.entity.AccommodationType;
@@ -20,7 +19,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
