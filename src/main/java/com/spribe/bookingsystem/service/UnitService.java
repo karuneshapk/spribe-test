@@ -7,7 +7,9 @@ import com.spribe.bookingsystem.entity.EventStatus;
 import com.spribe.bookingsystem.entity.PaymentEntity;
 import com.spribe.bookingsystem.entity.PaymentStatus;
 import com.spribe.bookingsystem.entity.UnitEntity;
+import com.spribe.bookingsystem.entity.UserEntity;
 import com.spribe.bookingsystem.mapper.UnitMapper;
+import com.spribe.bookingsystem.payload.request.dto.UnitDto;
 import com.spribe.bookingsystem.payload.response.SearchUnitResponse;
 import com.spribe.bookingsystem.payload.response.data.UnitData;
 import com.spribe.bookingsystem.repository.EventRepository;
@@ -22,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +32,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UnitService {
 
+    private final UserService userService;
     private final EventRepository eventRepository;
     private final UnitRepository unitRepository;
     private final StringRedisTemplate redisTemplate;
@@ -72,35 +76,48 @@ public class UnitService {
     }
 
     @Transactional
-    public UnitEntity addUnit(UnitEntity unit) {
-        unit.setTotalCost(unit.getBaseCost().multiply(BigDecimal.valueOf(1.15))); // Add 15% markup
+    public UnitEntity addUnit(UnitDto unitDto) {
+        UserEntity user = userService.getUserById(unitDto.userId());
+        UnitEntity unit = unitMapper.toEntity(unitDto, user);
         UnitEntity savedUnit = unitRepository.save(unit);
-        updateAvailableUnitsCacheSafely(); // Ensure thread safety
+
+
+        updateAvailableUnitsCacheSafely();
         return savedUnit;
+    }
+
+//    private void updateAvailableUnitsCacheSafely() {
+//        redisTemplate.watch(AVAILABLE_UNITS_KEY);
+//
+//        long availableUnitsCount = getAvailableUnitsCount(null, null);
+//
+//        redisTemplate.multi();
+//        redisTemplate.opsForValue().set(AVAILABLE_UNITS_KEY, String.valueOf(availableUnitsCount));
+//        redisTemplate.exec();
+//    }
+
+    private void updateAvailableUnitsCacheSafely() {
+        redisTemplate.execute((RedisCallback<Void>) connection -> {
+            byte[] key = redisTemplate.getStringSerializer().serialize(AVAILABLE_UNITS_KEY);
+
+            connection.watch(key); // Watch the key
+
+            long availableUnitsCount = getAvailableUnitsCount(null, null);
+
+            connection.multi(); // Start transaction
+            connection.set(key, redisTemplate.getStringSerializer().serialize(String.valueOf(availableUnitsCount)));
+            List<Object> execResult = connection.exec(); // Execute transaction
+
+            if (execResult == null) {
+                throw new RuntimeException("Redis transaction failed due to concurrent modification.");
+            }
+
+            return null;
+        });
     }
 
     public void updateAvailability(int unitId) {
         updateAvailableUnitsCacheSafely();
-    }
-
-    private void updateAvailableUnitsCacheSafely() {
-        redisTemplate.watch(AVAILABLE_UNITS_KEY);
-
-        long availableUnits = unitRepository.countByEventsEmpty();
-
-        // Step 1: Check if unit is in Redis (already booked)
-        Set<String> redisKeys = redisTemplate.keys(REDIS_UNITS_KEY + ":*");
-
-        // Step 2: Cleanup orphaned events & payments before processing new ones (in case of crashed application)
-        cleanupOrphanedPayments(null, redisKeys);
-
-//        // Step 3: Check cache if unit already has PENDING status for date range
-//        paymentRepository.fin
-
-
-        redisTemplate.multi();
-        redisTemplate.opsForValue().set(AVAILABLE_UNITS_KEY, String.valueOf(availableUnits));
-        redisTemplate.exec();
     }
 
     public long getAvailableUnits() {

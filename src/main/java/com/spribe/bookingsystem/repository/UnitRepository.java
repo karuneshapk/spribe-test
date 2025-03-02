@@ -31,8 +31,8 @@ public interface UnitRepository extends JpaRepository<UnitEntity, Integer> {
         + "     SELECT 1 "
         + "     FROM EventEntity event"
         + "     WHERE event.unit.id = unit.id"
-        + "     AND event.startDate < :endDate"
-        + "     AND event.endDate > :startDate"
+        + "         AND event.startDate < :endDate"
+        + "         AND event.endDate > :startDate"
         + " )"
     )
     Page<UnitEntity> findAvailableUnits(
@@ -47,12 +47,18 @@ public interface UnitRepository extends JpaRepository<UnitEntity, Integer> {
 
     @Query("SELECT COUNT(u) FROM UnitEntity u"
         + " WHERE NOT EXISTS ("
-        + "    SELECT 1"
-        + "    FROM EventEntity e"
-        + "    WHERE e.unit.id = u.id"
-        + "     AND (e.startDate < :endDate AND e.endDate > :startDate)"
-        + "     AND e.status IN ('CONFIRMED','PENDING')"
-        + " )"
-    )
-    long countAvailableUnits(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+        + "     SELECT 1 FROM EventEntity e"
+        + "     WHERE e.unit.id = u.id"
+        + "     AND ("
+        + "         (:startDate IS NULL AND :endDate IS NULL AND e.endDate > CURRENT_DATE) OR"
+        + "         (:startDate IS NOT NULL AND :endDate IS NULL AND e.endDate > :startDate) OR"
+        + "         (:startDate IS NULL AND :endDate IS NOT NULL AND e.startDate < :endDate) OR"
+        + "         (:startDate IS NOT NULL AND :endDate IS NOT NULL AND e.startDate < :endDate AND e.endDate > :startDate)"
+        + "     )"
+        + "     AND e.status IN ('CONFIRMED', 'PENDING')"
+        + " )")
+    long countAvailableUnits(
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate
+    );
 }
