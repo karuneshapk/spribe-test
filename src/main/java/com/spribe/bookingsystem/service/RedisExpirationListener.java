@@ -1,5 +1,6 @@
 package com.spribe.bookingsystem.service;
 
+import static com.spribe.bookingsystem.util.Constants.PENDING_PAYMENTS_KEY;
 import com.spribe.bookingsystem.entity.EventStatus;
 import com.spribe.bookingsystem.entity.PaymentEntity;
 import com.spribe.bookingsystem.entity.PaymentStatus;
@@ -16,13 +17,11 @@ public class RedisExpirationListener implements MessageListener {
     private final PaymentRepository paymentRepository;
     private final EventRepository bookingRepository;
 
-    private static final String PENDING_PAYMENTS_KEY = "pending_payments";
-
     @Override
     public void onMessage(Message message, byte[] pattern) {
         String expiredKey = message.toString();
-        if (expiredKey.startsWith(PENDING_PAYMENTS_KEY + ":")) {
-            String paymentIdStr = expiredKey.split(":")[1];
+        if (expiredKey.contains(PENDING_PAYMENTS_KEY + ":")) {
+            String paymentIdStr = expiredKey.split(":")[3];
             int paymentId = Integer.parseInt(paymentIdStr);
 
             // Fetch payment from DB and mark it as FAILED

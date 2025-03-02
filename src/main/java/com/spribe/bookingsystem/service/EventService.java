@@ -1,16 +1,23 @@
 package com.spribe.bookingsystem.service;
 
 
+import static com.spribe.bookingsystem.util.Constants.PENDING_PAYMENTS_KEY;
+import static com.spribe.bookingsystem.util.Constants.REDIS_UNITS_KEY;
+import static java.lang.Integer.*;
 import com.spribe.bookingsystem.entity.EventEntity;
 import com.spribe.bookingsystem.entity.EventStatus;
+import com.spribe.bookingsystem.entity.PaymentEntity;
+import com.spribe.bookingsystem.entity.PaymentStatus;
 import com.spribe.bookingsystem.entity.UnitEntity;
 import com.spribe.bookingsystem.entity.UserEntity;
 import com.spribe.bookingsystem.repository.EventRepository;
+import com.spribe.bookingsystem.repository.PaymentRepository;
 import com.spribe.bookingsystem.repository.UnitRepository;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -23,58 +30,100 @@ public class EventService {
     private final UserService userService;
     private final UnitRepository unitRepository;
     private final PaymentService paymentService;
+    private final PaymentRepository paymentRepository;
     private final StringRedisTemplate redisTemplate;
+
+
 
     @Transactional
     public EventEntity bookUnit(int userId, int unitId, LocalDate startDate, LocalDate endDate) {
         UserEntity user = userService.getUserById(userId)
             .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        UnitEntity unit = unitRepository.findById(unitId)
+            .orElseThrow(() -> new RuntimeException("Unit not found"));
 
+        // Step 1: Check if unit is in Redis (already booked)
+        Set<String> redisKeys = redisTemplate.keys(REDIS_UNITS_KEY + ":" + unitId + ":" + PENDING_PAYMENTS_KEY + ":*");
 
+        // Step 2: Cleanup orphaned events & payments before processing new ones (in case of crashed application)
+        cleanupOrphanedPayments(unitId, redisKeys);
 
-//        List<String> expiredPayments = redisTemplate.opsForList().range(EXPIRED_PAYMENTS_LIST, 0, -1);
-//        if (!CollectionUtils.isEmpty(expiredPayments)) {
-//            for (String paymentIdStr : expiredPayments) {
-//                int paymentId = Integer.parseInt(paymentIdStr);
-//
-//                PaymentEntity payment = paymentRepository.findById(paymentId).orElse(null);
-//                if (payment != null && payment.getStatus() == PaymentStatus.PENDING) {
-//                    payment.setStatus(PaymentStatus.FAILED);
-//                    paymentRepository.save(payment);
-//                }
-//            }
-//            // Remove processed payments from Redis
-//            redisTemplate.delete(EXPIRED_PAYMENTS_LIST);
-//        }
-
-
-
-        Optional<UnitEntity> unit = unitRepository.findById(unitId);
-        if (unit.isEmpty()) {
-            throw new RuntimeException("Unit not found");
-        }
-        if (!isAvailable(unitId, startDate, endDate)) {
-            throw new RuntimeException("Unit is not available for selected dates");
+        // Step 3: Check cache if unit already has PENDING status for date range
+        if (CollectionUtils.isNotEmpty(redisKeys)) {
+            for (String redisKey : redisKeys) {
+                if (isDateRangeOverlapping(redisKey, startDate, endDate)) {
+                    throw new RuntimeException("Unit is already booked for overlapping dates (wait ~15 minutes and check again)");
+                }
+            }
         }
 
+        // Step 4: Check DB if unit already has CONFIRMED status for current date range
+        boolean isAvailable = paymentRepository.isUnitAvailableForBooking(unitId, startDate, endDate);
+
+        if (!isAvailable) {
+            throw new RuntimeException("Unit is already booked for overlapping dates");
+        }
+
+        // Step 5: Proceed with booking since no conflicts were found
         EventEntity booking = new EventEntity();
         booking.setUser(user);
-        booking.setUnit(unit.get());
+        booking.setUnit(unit);
         booking.setStartDate(startDate);
         booking.setEndDate(endDate);
-        booking.setTotalPrice(unit.get().getTotalCost());
+        booking.setTotalPrice(unit.getTotalCost());
         booking.setStatus(EventStatus.PENDING);
 
         booking = eventRepository.save(booking);
+
+        // Step 5: Store booking in Redis with 15-minute expiration
+        String redisKey = makeRedisKey(booking, startDate, endDate);
+        redisTemplate.opsForValue().set(redisKey, "PENDING", 15, TimeUnit.MINUTES);
 
         paymentService.initiatePayment(booking);
         return booking;
     }
 
-    public boolean isAvailable(int unitId, LocalDate startDate, LocalDate endDate) {
-        List<EventEntity> events = eventRepository.findByUnitIdAndStatus(unitId, EventStatus.CONFIRMED);
-        return events.stream().noneMatch(b -> !(endDate.isBefore(b.getStartDate()) || startDate.isAfter(b.getEndDate())));
+    /**
+     * Cleanup orphaned events & payments (DB contains `PENDING/PAID` but Redis doesn't)
+     */
+    private void cleanupOrphanedPayments(int unitId, Set<String> redisKeys) {
+        List<Integer> paymentIds = redisKeys.isEmpty() ? null : redisKeys.stream().map(this::getPaymentId).toList();
+
+        List<PaymentEntity> orphanedPayments = paymentRepository.findOrphanedPaymentsNotInIds(unitId, paymentIds);
+
+        for (PaymentEntity payment : orphanedPayments) {
+            payment.getEvent().setStatus(EventStatus.CANCELLED);
+            eventRepository.save(payment.getEvent());
+
+            payment.setStatus(PaymentStatus.FAILED);
+            paymentRepository.save(payment);
+        }
     }
+
+    private Integer getPaymentId(String key) {
+        return parseInt(key.split(":")[3]);
+    }
+
+    /**
+     * Check if booking dates overlap with a Redis-stored event.
+     */
+    private boolean isDateRangeOverlapping(String redisKey, LocalDate startDate, LocalDate endDate) {
+        String[] parts = redisKey.split(":startDate:|:endDate:");
+        if (parts.length < 3) return false;
+
+        LocalDate existingStartDate = LocalDate.parse(parts[1]);
+        LocalDate existingEndDate = LocalDate.parse(parts[2]);
+
+        return (startDate.isBefore(existingEndDate) && endDate.isAfter(existingStartDate));
+    }
+
+    private String makeRedisKey(EventEntity booking, LocalDate startDate, LocalDate endDate) {
+        return REDIS_UNITS_KEY + ":" + booking.getUnit().getId() + ":"
+            + PENDING_PAYMENTS_KEY + ":" + booking.getId() + ":"
+            + "startDate:" + startDate.toString() + ":"
+            + "endDate:" + endDate.toString();
+    }
+
 }
 
 

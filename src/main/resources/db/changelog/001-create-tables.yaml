@@ -158,10 +158,6 @@ databaseChangeLog:
                   name: created_at
                   type: TIMESTAMP
                   defaultValueComputed: CURRENT_TIMESTAMP
-        - addUniqueConstraint:
-            tableName: events
-            columnNames: unit_id, start_date, end_date
-            constraintName: unique_events
 
   - changeSet:
       id: 008-create-payments-table

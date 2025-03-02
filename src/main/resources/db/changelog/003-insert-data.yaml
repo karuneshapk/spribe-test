@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: 006-insert-users
-      author: Nemo
+      author: mholub
       changes:
         - insert:
             tableName: users
@@ -33,7 +33,7 @@ databaseChangeLog:
 
   - changeSet:
       id: 007-insert-units
-      author: Nemo
+      author: mholub
       changes:
         - insert:
             tableName: units
@@ -107,3 +107,171 @@ databaseChangeLog:
               - column:
                   name: total_cost
                   value: 230.00
+        - insert:
+            tableName: units
+            columns:
+              - column:
+                  name: user_id
+                  value: 1
+              - column:
+                  name: num_rooms
+                  value: 3
+              - column:
+                  name: type
+                  value: "FLAT"
+              - column:
+                  name: floor
+                  value: 9
+              - column:
+                  name: description
+                  value: "Modern flat in old city center"
+              - column:
+                  name: base_cost
+                  value: 190.00
+              - column:
+                  name: total_cost
+                  value: 218.50
+        - insert:
+            tableName: units
+            columns:
+              - column:
+                  name: user_id
+                  value: 2
+              - column:
+                  name: num_rooms
+                  value: 5
+              - column:
+                  name: type
+                  value: "APARTMENTS"
+              - column:
+                  name: floor
+                  value: 1
+              - column:
+                  name: description
+                  value: "Luxury apartments with a garden"
+              - column:
+                  name: base_cost
+                  value: 300.00
+              - column:
+                  name: total_cost
+                  value: 345.00
+        - insert:
+            tableName: units
+            columns:
+              - column:
+                  name: user_id
+                  value: 1
+              - column:
+                  name: num_rooms
+                  value: 4
+              - column:
+                  name: type
+                  value: "HOME"
+              - column:
+                  name: floor
+                  value: 2
+              - column:
+                  name: description
+                  value: "Family-friendly home with backyard"
+              - column:
+                  name: base_cost
+                  value: 120.00
+              - column:
+                  name: total_cost
+                  value: 138.00
+        - insert:
+            tableName: units
+            columns:
+              - column:
+                  name: user_id
+                  value: 2
+              - column:
+                  name: num_rooms
+                  value: 1
+              - column:
+                  name: type
+                  value: "FLAT"
+              - column:
+                  name: floor
+                  value: 6
+              - column:
+                  name: description
+                  value: "Small studio in a skyscraper"
+              - column:
+                  name: base_cost
+                  value: 75.00
+              - column:
+                  name: total_cost
+                  value: 86.25
+        - insert:
+            tableName: units
+            columns:
+              - column:
+                  name: user_id
+                  value: 3
+              - column:
+                  name: num_rooms
+                  value: 3
+              - column:
+                  name: type
+                  value: "APARTMENTS"
+              - column:
+                  name: floor
+                  value: 7
+              - column:
+                  name: description
+                  value: "High-rise apartment with sunset view"
+              - column:
+                  name: base_cost
+                  value: 250.00
+              - column:
+                  name: total_cost
+                  value: 287.50
+        - insert:
+            tableName: units
+            columns:
+              - column:
+                  name: user_id
+                  value: 1
+              - column:
+                  name: num_rooms
+                  value: 2
+              - column:
+                  name: type
+                  value: "FLAT"
+              - column:
+                  name: floor
+                  value: 4
+              - column:
+                  name: description
+                  value: "Charming flat near the university"
+              - column:
+                  name: base_cost
+                  value: 110.00
+              - column:
+                  name: total_cost
+                  value: 126.50
+        - insert:
+            tableName: units
+            columns:
+              - column:
+                  name: user_id
+                  value: 2
+              - column:
+                  name: num_rooms
+                  value: 5
+              - column:
+                  name: type
+                  value: "HOME"
+              - column:
+                  name: floor
+                  value: 1
+              - column:
+                  name: description
+                  value: "Spacious villa with private pool"
+              - column:
+                  name: base_cost
+                  value: 400.00
+              - column:
+                  name: total_cost
+                  value: 460.00

@@ -2,6 +2,8 @@ package com.spribe.bookingsystem.controller;
 
 import com.spribe.bookingsystem.entity.AccommodationType;
 import com.spribe.bookingsystem.entity.UnitEntity;
+import com.spribe.bookingsystem.payload.response.SearchUnitResponse;
+import com.spribe.bookingsystem.payload.response.UnitData;
 import com.spribe.bookingsystem.service.UnitService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -28,23 +30,26 @@ public class UnitController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<UnitEntity>> searchUnits(
-        @RequestParam AccommodationType type,
-        @RequestParam int numRooms,
-        @RequestParam int floor,
-        @RequestParam BigDecimal minCost,
-        @RequestParam BigDecimal maxCost,
-        @RequestParam LocalDate startDate,
-        @RequestParam LocalDate endDate,
+    public SearchUnitResponse searchUnits(
+        @RequestParam(required = false) AccommodationType type,
+        @RequestParam(required = false) Integer numRooms,
+        @RequestParam(required = false) Integer floor,
+        @RequestParam(required = false) BigDecimal minCost,
+        @RequestParam(required = false) BigDecimal maxCost,
+        @RequestParam(required = false) LocalDate startDate,
+        @RequestParam(required = false) LocalDate endDate,
         @RequestParam int page,
         @RequestParam int size,
         @RequestParam String sortBy,
         @RequestParam boolean asc) {
-        return ResponseEntity.ok(unitService.searchUnits(type, numRooms, floor, minCost, maxCost, startDate, endDate, page, size, sortBy, asc).getContent());
+        return unitService.searchUnits(type, numRooms, floor, minCost, maxCost, startDate, endDate, page, size, sortBy, asc);
     }
 
     @GetMapping("/available-count")
-    public ResponseEntity<Long> getAvailableUnitsCount() {
-        return ResponseEntity.ok(unitService.getAvailableUnits());
+    public ResponseEntity<Long> getAvailableUnitsCount(
+        @RequestParam LocalDate startDate,
+        @RequestParam LocalDate endDate) {
+        long count = unitService.getAvailableUnitsCount(startDate, endDate);
+        return ResponseEntity.ok(count);
     }
 }
