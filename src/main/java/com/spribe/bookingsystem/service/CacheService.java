@@ -96,7 +96,6 @@ public class CacheService {
         return redisKey;
     }
 
-
     public void putEventToTheCacheWithExpirationTime(EventEntity eventEntity) {
         String redisKey = makeRedisKey(eventEntity);
         redisTemplate.opsForValue().set(redisKey, "PENDING", PAYMENT_EXPIRATION_TIME, TimeUnit.MINUTES);
@@ -129,6 +128,5 @@ public class CacheService {
             + "startDate:" + eventEntity.getStartDate().toString() + ":"
             + "endDate:" + eventEntity.getEndDate().toString();
     }
-
 
 }

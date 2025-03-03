@@ -32,25 +32,35 @@ public class BookingService {
 
     @Transactional
     public EventEntity bookUnit(int userId, int unitId, LocalDate startDate, LocalDate endDate) {
-        // Step 1: Check if unit is in Redis (already booked)
+        log.debug("Booking unit: {} for user: {} - startDate: {}, endDate: {}", unitId, userId, startDate, endDate);
+        checkCache(unitId, startDate, endDate);
+        return checkDbAndPersistUnit(userId, unitId, startDate, endDate);
+    }
+
+    private void checkCache(Integer unitId, LocalDate startDate, LocalDate endDate) {
+        log.debug("Check cache for unit: {}", unitId);
         Set<String> redisKeys = cacheService.getKeysForUnitId(unitId);
 
-        // Step 2: Cleanup orphaned events & payments before processing new ones (in case of crashed application)
+        // Cleanup orphaned events & payments before processing new ones (in case of crashed application)
         cleanupOrphanedPayments(unitId, redisKeys);
 
-        // Step 3: Check cache if unit already has PENDING status for date range
+        // Check cache if unit already has PENDING status for date range
         if (CollectionUtils.isNotEmpty(redisKeys)) {
             for (String redisKey : redisKeys) {
                 if (isDateRangeOverlapping(redisKey, startDate, endDate)) {
+                    log.error("Unit {} is already booked for overlapping dates (wait ~15 minutes and check again)", unitId);
                     throw new UnitAlreadyBookedException("Unit is already booked for overlapping dates (wait ~15 minutes and check again)");
                 }
             }
         }
+    }
 
-        // Step 4: Check DB if unit already has CONFIRMED status for current date range
+    private EventEntity checkDbAndPersistUnit(int userId, int unitId, LocalDate startDate, LocalDate endDate) {
+        // Check DB if unit already has CONFIRMED status for current date range
         boolean isAvailable = paymentService.isUnitAvailable(unitId, startDate, endDate);
 
         if (!isAvailable) {
+            log.error("Unit {} is already booked for overlapping dates: startDate: {} - endDate {}", unitId, startDate.toString(), endDate.toString());
             throw new UnitAlreadyBookedException("Unit is already booked for overlapping dates");
         }
 
@@ -75,6 +85,10 @@ public class BookingService {
 
             payment.setStatus(PaymentStatus.FAILED);
             paymentService.save(payment);
+        }
+
+        if (CollectionUtils.isNotEmpty(orphanedPayments)) {
+            log.debug("Cleanup orphaned payments: {}", orphanedPayments.size());
         }
     }
 
@@ -107,6 +121,7 @@ public class BookingService {
      */
     private boolean isDateRangeOverlapping(String redisKey, LocalDate startDate, LocalDate endDate) {
         String[] parts = redisKey.split(":startDate:|:endDate:");
+
         if (parts.length < 3) return false;
 
         LocalDate existingStartDate = LocalDate.parse(parts[1]);
@@ -116,5 +131,3 @@ public class BookingService {
     }
 
 }
-
-

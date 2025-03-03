@@ -21,4 +21,5 @@ public class BookingController {
     public ResponseEntity<EventEntity> bookUnit(@RequestParam int userId, @RequestParam int unitId, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
         return ResponseEntity.ok(eventService.bookUnit(userId, unitId, startDate, endDate));
     }
+
 }

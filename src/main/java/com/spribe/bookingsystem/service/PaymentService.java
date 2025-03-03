@@ -59,7 +59,9 @@ public class PaymentService {
     }
 
     public List<PaymentEntity> findOrphanedPayments(Integer unitId, List<Integer> paymentIds) {
-        return paymentRepository.findOrphanedPaymentsNotInIds(unitId, paymentIds);
+        List<PaymentEntity> orphanedPayments = paymentRepository.findOrphanedPaymentsNotInIds(unitId, paymentIds);
+        log.debug("Found {} orphaned payments in {}", orphanedPayments.size(), unitId);
+        return orphanedPayments;
     }
 
     public boolean isUnitAvailable(Integer unitId, LocalDate startDate, LocalDate endDate) {
