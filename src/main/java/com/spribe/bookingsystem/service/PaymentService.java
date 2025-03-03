@@ -5,6 +5,8 @@ import com.spribe.bookingsystem.entity.EventEntity;
 import com.spribe.bookingsystem.entity.EventStatus;
 import com.spribe.bookingsystem.entity.PaymentEntity;
 import com.spribe.bookingsystem.entity.PaymentStatus;
+import com.spribe.bookingsystem.exception.PaymentAlreadyFailedException;
+import com.spribe.bookingsystem.exception.PaymentAlreadyPaidException;
 import com.spribe.bookingsystem.exception.PaymentNotFoundException;
 import com.spribe.bookingsystem.repository.EventRepository;
 import com.spribe.bookingsystem.repository.PaymentRepository;
@@ -75,6 +77,14 @@ public class PaymentService {
         PaymentEntity payment = paymentRepository.findById(paymentId)
             .orElseThrow(() -> new PaymentNotFoundException(paymentId));
 
+        if (payment.getStatus() == PaymentStatus.PAID && !success) {
+            throw new PaymentAlreadyPaidException(paymentId);
+        }
+
+        if (payment.getStatus() == PaymentStatus.FAILED && success) {
+            throw new PaymentAlreadyFailedException(paymentId);
+        }
+
         String keyPattern = cacheService.makeRedisKey(payment);
         Set<String> redisKeys = cacheService.getKeysForUnitIdAndPaymentId(keyPattern);
 
@@ -92,7 +102,6 @@ public class PaymentService {
         paymentRepository.save(payment);
         bookingRepository.save(payment.getEvent());
     }
-
 
     private Integer getPaymentId(String key) {
         return parseInt(key.split(":")[3]);

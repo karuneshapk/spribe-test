@@ -17,6 +17,10 @@ spring:
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.yaml
     enabled: true
+app:
+  payment:
+    expiration-time: 15
+    time-unit: MINUTES
 
 springdoc:
   api-docs:

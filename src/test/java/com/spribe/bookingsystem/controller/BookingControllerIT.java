@@ -1,6 +1,7 @@
 package com.spribe.bookingsystem.controller;
 
 import com.spribe.bookingsystem.config.IntegrationTest;
+import com.spribe.bookingsystem.config.PaymentProperties;
 import com.spribe.bookingsystem.entity.UnitEntity;
 import com.spribe.bookingsystem.entity.UserEntity;
 import com.spribe.bookingsystem.payload.response.data.EventData;
@@ -34,6 +35,7 @@ public class BookingControllerIT {
 
     @Autowired private WebApplicationContext webApplicationContext;
     @Autowired private PaymentRepository paymentRepository;
+    @Autowired private PaymentProperties paymentProperties;
     @Autowired private EventRepository eventRepository;
     @Autowired private PaymentService paymentService;
     @Autowired private BookingService bookingService;
@@ -102,6 +104,7 @@ public class BookingControllerIT {
         // Given - First booking already exists
         EventData existingEvent = bookingService.bookUnit(testUser.getId(), testUnit.getId(), now().plusDays(2),
             now().plusDays(5));
+
         paymentService.processPayment(existingEvent.paymentId(), true);
 
         // When - Try to book overlapping dates
@@ -116,6 +119,31 @@ public class BookingControllerIT {
         perform.andExpect(status().isConflict());
     }
 
+    @Test
+    void shouldAllowBookingIfPreviousBookingPaymentTimeHasExpired() throws Exception {
+        // Given - First booking already exists
+        EventData existingEvent = bookingService.bookUnit(testUser.getId(), testUnit.getId(), now().plusDays(2),
+            now().plusDays(5));
+
+        // Simulate payment expiration delay (5 seconds)
+        Thread.sleep(paymentProperties.expirationTime() * 1000 + 2000);
+
+        // When - Try to book overlapping dates
+        ResultActions perform = mockMvc.perform(post("/bookings")
+            .param("userId", String.valueOf(testUser.getId()))
+            .param("unitId", String.valueOf(testUnit.getId()))
+            .param("startDate", now().plusDays(3).toString()) // Overlaps with existing
+            .param("endDate", now().plusDays(6).toString())
+            .contentType(MediaType.APPLICATION_JSON));
+
+        // Then - Verify the new booking is allowed
+        perform
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.userId", equalTo(testUser.getId())))
+            .andExpect(jsonPath("$.unitId", equalTo(testUnit.getId())))
+            .andExpect(jsonPath("$.startDate", equalTo(now().plusDays(3).toString())))
+            .andExpect(jsonPath("$.endDate", equalTo(now().plusDays(6).toString())));
+    }
     @Test
     void shouldPassToBookIfUnitAlreadyBookedInPayedDeclinedStatus() throws Exception {
         // Given - First booking already exists
@@ -145,6 +173,9 @@ public class BookingControllerIT {
         // Given - First booking already exists
         EventData existingEvent = bookingService.bookUnit(testUser.getId(), testUnit.getId(), now().plusDays(2),
             now().plusDays(5));
+
+        // Simulate payment expiration delay (3 seconds)
+        Thread.sleep(paymentProperties.expirationTime() * 1000 - 2000);
 
         // When - Try to book overlapping dates
         ResultActions perform = mockMvc.perform(post("/bookings")

@@ -11,16 +11,16 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(UnitAlreadyBookedException.class)
+    @ExceptionHandler({UnitAlreadyBookedException.class, PaymentAlreadyPaidException.class,
+        PaymentAlreadyFailedException.class})
     public ResponseEntity<Map<String, Object>> handleEventException(Exception ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
             "timestamp", LocalDateTime.now(),
             "status", HttpStatus.CONFLICT.value(),
-            "error", "Internal Server Error",
+            "error", "Conflict",
             "message", ex.getMessage()
         ));
     }
-
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleUserNotFoundException(UserNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(

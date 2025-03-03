@@ -11,3 +11,8 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-test.yaml
     enabled: true
+
+app:
+  payment:
+    expiration-time: 3
+    time-unit: SECONDS

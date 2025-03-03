@@ -4,6 +4,7 @@ import static com.spribe.bookingsystem.util.Constants.PAYMENT_EXPIRATION_TIME;
 import static com.spribe.bookingsystem.util.Constants.PENDING_PAYMENTS_KEY;
 import static com.spribe.bookingsystem.util.Constants.REDIS_UNITS_KEY;
 import static java.lang.Integer.parseInt;
+import com.spribe.bookingsystem.config.PaymentProperties;
 import com.spribe.bookingsystem.entity.EventEntity;
 import com.spribe.bookingsystem.entity.EventStatus;
 import com.spribe.bookingsystem.entity.PaymentEntity;
@@ -29,9 +30,10 @@ public class CacheService {
     private static final String AVAILABLE_UNITS_KEY = "available_units_count";
 
     private final StringRedisTemplate redisTemplate;
-    private final UnitRepository unitRepository;
+    private final PaymentProperties paymentProperties;
     private final PaymentRepository paymentRepository;
     private final EventRepository eventRepository;
+    private final UnitRepository unitRepository;
 
     @Transactional
     public void updateAvailableUnitsCacheSafely() {
@@ -97,11 +99,14 @@ public class CacheService {
     }
 
     public void putEventToTheCacheWithExpirationTime(EventEntity eventEntity) {
+        long expirationTime = paymentProperties.expirationTime();
+        TimeUnit timeUnit = paymentProperties.timeUnit();
+
         String redisKey = makeRedisKey(eventEntity);
-        redisTemplate.opsForValue().set(redisKey, "PENDING", PAYMENT_EXPIRATION_TIME, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(redisKey, "PENDING", expirationTime, timeUnit);
 
         // Schedule a callback to move expired payments to the expired list when TTL reaches 0
-        redisTemplate.expire(redisKey, PAYMENT_EXPIRATION_TIME, TimeUnit.MINUTES);
+        redisTemplate.expire(redisKey, expirationTime, timeUnit);
     }
 
     private void cleanupOrphanedPayments(Integer unitId, Set<String> redisKeys) {
