@@ -1,0 +1,6 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/001-create-test-tables.yaml
+
+  - include:
+      file: db/changelog/002-create-test-indexes.yaml

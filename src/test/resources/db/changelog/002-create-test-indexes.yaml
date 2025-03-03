@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-create-indexes
+      author: Nemo
+      changes:
+        - createIndex:
+            indexName: idx_units_type
+            tableName: units
+            columns:
+              - column:
+                  name: type
+
+        - createIndex:
+            indexName: idx_events_status
+            tableName: events
+            columns:
+              - column:
+                  name: status

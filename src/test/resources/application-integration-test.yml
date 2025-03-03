@@ -1,0 +1,13 @@
+spring:
+
+  application:
+    name: bookingsystem
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-test.yaml
+    enabled: true
