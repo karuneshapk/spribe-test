@@ -1,5 +1,6 @@
 package com.spribe.bookingsystem.controller;
 
+import static com.spribe.bookingsystem.util.TestConstants.TWO_SECONDS;
 import static java.time.LocalDate.now;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -29,8 +30,6 @@ import org.springframework.web.context.WebApplicationContext;
 
 @IntegrationTest
 public class PaymentControllerIT {
-
-    private static final Long TWO_SECONDS = 2000L;
 
     @Autowired private WebApplicationContext webApplicationContext;
     @Autowired private PaymentRepository paymentRepository;

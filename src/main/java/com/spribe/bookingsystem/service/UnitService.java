@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UnitService {
 
-    private final StringRedisTemplate redisTemplate;
     private final UnitRepository unitRepository;
     private final PaymentService paymentService;
     private final CacheService cacheService;
