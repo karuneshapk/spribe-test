@@ -1,6 +1,7 @@
 package com.spribe.bookingsystem.controller;
 
 import com.spribe.bookingsystem.entity.EventEntity;
+import com.spribe.bookingsystem.payload.response.data.EventData;
 import com.spribe.bookingsystem.service.BookingService;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +19,8 @@ public class BookingController {
     private final BookingService eventService;
 
     @PostMapping
-    public ResponseEntity<EventEntity> bookUnit(@RequestParam int userId, @RequestParam int unitId, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
-        return ResponseEntity.ok(eventService.bookUnit(userId, unitId, startDate, endDate));
+    public EventData bookUnit(@RequestParam int userId, @RequestParam int unitId, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
+        return eventService.bookUnit(userId, unitId, startDate, endDate);
     }
 
 }

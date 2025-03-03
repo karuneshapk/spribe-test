@@ -10,13 +10,15 @@ import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.utility.DockerImageName;
 
 @TestConfiguration
 @RequiredArgsConstructor
 public class TestRedisConfiguration implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
-    private static final GenericContainer<?> REDIS_CONTAINER = new GenericContainer<>("redis:latest")
-        .withExposedPorts(6379);
+    private static final GenericContainer<?> REDIS_CONTAINER = new GenericContainer<>(DockerImageName.parse("redis:latest"))
+        .withExposedPorts(6379)
+        .withCommand("redis-server", "--appendonly", "yes", "--notify-keyspace-events", "Ex");
 
     @Override
     @SneakyThrows
@@ -28,7 +30,8 @@ public class TestRedisConfiguration implements ApplicationContextInitializer<Con
 
         addInlinedPropertiesToEnvironment(applicationContext,
             "spring.data.redis.host=" + redisHost,
-            "spring.data.redis.port=" + redisPort
+            "spring.data.redis.port=" + redisPort,
+            "spring.redis.notify-keyspace-events=Ex"
         );
     }
 

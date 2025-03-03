@@ -32,6 +32,7 @@ public class UserEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Builder.Default
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 }

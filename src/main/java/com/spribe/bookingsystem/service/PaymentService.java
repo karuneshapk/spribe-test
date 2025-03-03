@@ -28,7 +28,7 @@ public class PaymentService {
     private final CacheService cacheService;
 
     @Transactional
-    public void initiatePayment(EventEntity event) {
+    public PaymentEntity initiatePayment(EventEntity event) {
         PaymentEntity payment = new PaymentEntity();
         payment.setEvent(event);
         payment.setUser(event.getUser());
@@ -38,6 +38,8 @@ public class PaymentService {
         PaymentEntity savedPayment = paymentRepository.save(payment);
 
         cacheService.putEventToTheCacheWithExpirationTime(savedPayment.getEvent());
+
+        return savedPayment;
     }
 
     public void cleanupOrphanedPayments(Integer unitId, Set<String> redisKeys) {

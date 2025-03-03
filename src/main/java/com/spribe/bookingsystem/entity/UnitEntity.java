@@ -16,12 +16,14 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -50,12 +52,14 @@ public class UnitEntity {
     @Column(nullable = false)
     private BigDecimal baseCost;
 
+    @Builder.Default
     @Column(nullable = false)
     private BigDecimal markup = BigDecimal.valueOf(0.15);
 
     @Column(nullable = false)
     private BigDecimal totalCost;
 
+    @Builder.Default
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

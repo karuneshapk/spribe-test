@@ -52,6 +52,7 @@ public class EventEntity {
     @Column(nullable = false)
     private EventStatus status;
 
+    @Builder.Default
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

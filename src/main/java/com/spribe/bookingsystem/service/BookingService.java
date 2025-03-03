@@ -8,6 +8,8 @@ import com.spribe.bookingsystem.entity.PaymentStatus;
 import com.spribe.bookingsystem.entity.UnitEntity;
 import com.spribe.bookingsystem.entity.UserEntity;
 import com.spribe.bookingsystem.exception.UnitAlreadyBookedException;
+import com.spribe.bookingsystem.mapper.EventMapper;
+import com.spribe.bookingsystem.payload.response.data.EventData;
 import com.spribe.bookingsystem.repository.EventRepository;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
@@ -27,14 +29,17 @@ public class BookingService {
     private final EventRepository eventRepository;
     private final PaymentService paymentService;
     private final CacheService cacheService;
+    private final EventMapper eventMapper;
     private final UserService userService;
     private final UnitService unitService;
 
     @Transactional
-    public EventEntity bookUnit(int userId, int unitId, LocalDate startDate, LocalDate endDate) {
+    public EventData bookUnit(int userId, int unitId, LocalDate startDate, LocalDate endDate) {
         log.debug("Booking unit: {} for user: {} - startDate: {}, endDate: {}", unitId, userId, startDate, endDate);
         checkCache(unitId, startDate, endDate);
-        return checkDbAndPersistUnit(userId, unitId, startDate, endDate);
+        EventData data = checkDbAndPersistUnit(userId, unitId, startDate, endDate);
+
+        return data;
     }
 
     private void checkCache(Integer unitId, LocalDate startDate, LocalDate endDate) {
@@ -55,7 +60,7 @@ public class BookingService {
         }
     }
 
-    private EventEntity checkDbAndPersistUnit(int userId, int unitId, LocalDate startDate, LocalDate endDate) {
+    private EventData checkDbAndPersistUnit(int userId, int unitId, LocalDate startDate, LocalDate endDate) {
         // Check DB if unit already has CONFIRMED status for current date range
         boolean isAvailable = paymentService.isUnitAvailable(unitId, startDate, endDate);
 
@@ -66,9 +71,9 @@ public class BookingService {
 
         EventEntity eventEntity = persistEvent(userId, unitId, startDate, endDate);
 
-        paymentService.initiatePayment(eventEntity);
-
-        return eventEntity;
+        PaymentEntity paymentEntity = paymentService.initiatePayment(eventEntity);
+        EventData data = eventMapper.toData(eventEntity, paymentEntity.getId());
+        return data;
     }
 
     /**

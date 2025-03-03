@@ -13,9 +13,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UnitAlreadyBookedException.class)
     public ResponseEntity<Map<String, Object>> handleEventException(Exception ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
             "timestamp", LocalDateTime.now(),
-            "status", HttpStatus.INTERNAL_SERVER_ERROR.value(),
+            "status", HttpStatus.CONFLICT.value(),
             "error", "Internal Server Error",
             "message", ex.getMessage()
         ));
