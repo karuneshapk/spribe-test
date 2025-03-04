@@ -94,17 +94,6 @@ docker compose up -d
 
 ---
 
-## 📌 Environment Variables
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5432/spribe` | Database URL |
-| `SPRING_DATASOURCE_USERNAME` | `spribe_user` | Database user |
-| `SPRING_DATASOURCE_PASSWORD` | `spribe_password` | Database password |
-| `REDIS_HOST` | `localhost` | Redis host |
-| `REDIS_PORT` | `6379` | Redis port |
-
----
-
 ## 📌 Key Features
 ✅ **Redis-backed caching** for faster unit availability lookup.  
 ✅ **15-minute expiration policy** for unpaid bookings.  
@@ -115,8 +104,7 @@ docker compose up -d
 ---
 
 ## 📌 Author
-🚀 Developed by **Mikhail Holub**  
-🔗 GitHub: [Your GitHub Profile](https://github.com/your-profile)
+🚀 Developed by **Mikhail Holub**
 
 ---
 

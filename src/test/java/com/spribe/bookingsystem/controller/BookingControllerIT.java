@@ -57,8 +57,8 @@ public class BookingControllerIT {
 
         // Create test user
         testUser = userRepository.save(UserEntity.builder()
-            .name("John Doe")
-            .email("john@example.com")
+            .name("Lion Pon")
+            .email("lionpon@gmail.com")
             .createdAt(LocalDateTime.now())
             .build());
 

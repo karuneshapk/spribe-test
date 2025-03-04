@@ -6,6 +6,8 @@ import com.spribe.bookingsystem.config.PaymentProperties;
 import com.spribe.bookingsystem.entity.AccommodationType;
 import com.spribe.bookingsystem.entity.UnitEntity;
 import com.spribe.bookingsystem.entity.UserEntity;
+import com.spribe.bookingsystem.repository.EventRepository;
+import com.spribe.bookingsystem.repository.PaymentRepository;
 import com.spribe.bookingsystem.repository.UnitRepository;
 import com.spribe.bookingsystem.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -33,8 +35,10 @@ public class UnitControllerIT {
 
     @Autowired private WebApplicationContext webApplicationContext;
     @Autowired private PaymentProperties paymentProperties;
-    @Autowired private UnitRepository unitRepository;
+    @Autowired private PaymentRepository paymentRepository;
+    @Autowired private EventRepository eventRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private UnitRepository unitRepository;
 
     private MockMvc mockMvc;
     private UserEntity testUser;
@@ -46,9 +50,14 @@ public class UnitControllerIT {
     void setup() {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 
+        paymentRepository.deleteAll();
+        eventRepository.deleteAll();
+        unitRepository.deleteAll();
+        userRepository.deleteAll();
+
         testUser = userRepository.save(UserEntity.builder()
-            .name("John Doe")
-            .email("john@example.com")
+            .name("Test User")
+            .email("testuser@example.com")
             .createdAt(LocalDateTime.now())
             .build());
 
